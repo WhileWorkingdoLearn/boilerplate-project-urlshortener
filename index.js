@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 let  bodyParser = require('body-parser');
+const dns = require('dns');
 const app = express();
 
 // Basic Configuration
@@ -12,9 +13,9 @@ const parser = bodyParser.urlencoded({extended:false});
 
 const urlMap = new Map();
 
-app.use(parser);
-
 app.use(cors());
+
+app.use(parser);
 
 app.use('/public', express.static(`${process.cwd()}/public`));
 
@@ -24,27 +25,33 @@ app.get('/', function(req, res) {
 
 
 app.post('/api/shorturl', function(req, res) {  
-  const url = req.body.url;
-  console.log(url);
-  const urlRegexPattern = /^https?:\/\/(www\.)?[\w-]+\.\w{2,5}/;
-  if(!urlRegexPattern.test(url)){
-    res.json({error: 'invalid url'});
-  }else{
-    const shortUrlNumber = Math.floor(Math.random() * 10000).toString();
-    urlMap.set(shortUrlNumber, url);
-    console.log("shorUrlNumber" +shortUrlNumber);
-    res.json({original_url: url, short_url: shortUrlNumber});
-  }
+  console.log("post");
+  const orgoUrl = req.body.url;
+  const url = new URL(req.body.url).hostname;
+  console.log("Url: " + url);
+  dns.lookup(url, (err, address, family) => {
+    if(err){
+      console.log("Error: " +  'invalid url');
+      res.json({error: 'invalid url'});
+    } else {
+      const shortUrl = Math.floor(Math.random() * 1000);
+      urlMap.set(shortUrl, orgoUrl);
+      console.log("ShortUrl: " + shortUrl);
+      res.json({original_url: orgoUrl, short_url: shortUrl});
+    }
+  });
 });
 
 
 app.get('/api/shorturl/:shortUrl', function(req, res) {
-  const shortUrl = req.params.shortUrl;
-  console.log(shortUrl);
-  console.log(urlMap.has(shortUrl));
+  console.log("get");
+  const shortUrl = parseInt(req.params.shortUrl,0);
+  console.log("ShortUrl: " +shortUrl);
+  console.log("Map has Url: " + urlMap.has(shortUrl));
   if(urlMap.has(shortUrl)){
     const url = urlMap.get(shortUrl);
-    res.redirect(url);} else {
+    res.redirect(url);
+  } else {
       res.json({error: 'invalid url'});
     }
 });
