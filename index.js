@@ -20,7 +20,7 @@ app.get('/', function(req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-app.post('/api/shorturl/new', function(req, res) {  
+app.post('/api/shorturl', function(req, res) {  
   const url = req.body.url;
   const urlRegexPattern = /^https?:\/\/(www\.)?[\w-]+\.\w{2,5}/;
   if(!urlRegexPattern.test(url)){
