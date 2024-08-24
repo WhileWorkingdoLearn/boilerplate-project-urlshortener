@@ -20,6 +20,8 @@ app.get('/', function(req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
+const urlMap = new Map();
+
 app.post('/api/shorturl', function(req, res) {  
   const url = req.body.url;
   const urlRegexPattern = /^https?:\/\/(www\.)?[\w-]+\.\w{2,5}/;
@@ -27,8 +29,18 @@ app.post('/api/shorturl', function(req, res) {
     res.json({error: 'invalid url'});
   }else{
     const shortUrlNumber = Math.floor(Math.random() * 10000).toString();
+    urlMap.set(shortUrlNumber, url);
     res.json({original_url: url, short_url: shortUrlNumber});
   }
+});
+
+app.get('/api/shorturl/:shortUrl', function(req, res) {
+  const shortUrl = req.params.shortUrl;
+  if(urlMap.has(shortUrl)){
+    const url = urlMap.get(shortUrl);
+    res.redirect(url);} else {
+      res.json({error: 'invalid url'});
+    }
 });
 
 // Your first API endpoint
